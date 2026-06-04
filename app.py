@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, Response
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+import matplotlib.pyplot as plt
 
 app = Flask(__name__)
 
@@ -42,7 +43,15 @@ def home():
 
         return redirect("/")
 
-    expenses = Expense.query.all()
+    search = request.args.get("search", "")
+
+    if search:
+        expenses = Expense.query.filter(
+        Expense.title.contains(search)
+        ).all()
+    else:
+        expenses = Expense.query.all()
+    
     incomes = Income.query.all()
 
     total_expense = sum(expense.amount for expense in expenses)
@@ -73,27 +82,7 @@ def delete(id):
 
 
 @app.route("/income", methods=["GET", "POST"])
-@app.route("/export")
-def export():
-
-    expenses = Expense.query.all()
-
-    csv_data = "Title,Amount\n"
-
-    for expense in expenses:
-        csv_data += f"{expense.title},{expense.amount}\n"
-
-    return Response(
-        csv_data,
-        mimetype="text/csv",
-        headers={
-            "Content-Disposition":
-            "attachment; filename=expenses.csv"
-        }
-    )
 def income():
-
-
 
     if request.method == "POST":
 
@@ -119,6 +108,46 @@ def income():
         incomes=incomes,
         total_income=total_income
     )
+
+
+@app.route("/export")
+def export():
+
+    expenses = Expense.query.all()
+
+    csv_data = "Title,Amount\n"
+
+    for expense in expenses:
+        csv_data += f"{expense.title},{expense.amount}\n"
+
+    return Response(
+        csv_data,
+        mimetype="text/csv",
+        headers={
+            "Content-Disposition":
+            "attachment; filename=expenses.csv"
+        }
+    )
+
+@app.route("/chart")
+def chart():
+
+    expenses = Expense.query.all()
+
+    labels = []
+    amounts = []
+
+    for expense in expenses:
+        labels.append(expense.title)
+        amounts.append(expense.amount)
+
+    plt.figure(figsize=(6, 6))
+    plt.pie(amounts, labels=labels, autopct="%1.1f%%")
+
+    plt.savefig("static/chart.png")
+    plt.close()
+
+    return render_template("chart.html")
 
 
 if __name__ == "__main__":

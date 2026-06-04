@@ -82,6 +82,24 @@
 
         <h3>All Expenses</h3>
 
+    <form method="GET" class="mb-3">
+
+        <input
+            type="text"
+            name="search"
+            class="form-control"
+            placeholder="Search Expense">
+
+        <button
+            type="submit"
+            class="btn btn-info mt-2">
+
+            Search
+
+        </button>
+
+    </form>
+
         <hr>
 
         {% for expense in expenses %}
